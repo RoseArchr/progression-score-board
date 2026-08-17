@@ -1,61 +1,44 @@
-import json
-import os
+from scoreboard import *
 
-def win(player: str, player_scores: dict[str, int]) -> dict[str, int]:
-    player_scores[player] += 1
-    save(player_scores)
-    return player_scores
-
-def save(player_scores: dict[str, int]):
-    with open("data.json", "w") as file:
-        json.dump(player_scores, file)
-
-def load() -> dict[str, int]:
-    with open("data.json") as file:
-        return json.load(file)
-
-def is_file_empty() -> bool:
-    return os.stat("data.json").st_size == 0
-
-def new_game():
-    player_scores = {}
-    print("How many players?")
-    players = int(input())
-    for i in range(players):
-        print(f"Enter player {i+1}:")
-        player_scores[str(input())] = 0
-    save(player_scores)
-
-def play(scores: dict[str, int]):
+def play(sb: Scoreboard):
     in_progress = True
+    scores = sb.load_scores()
     while in_progress:
         print("Enter winner (or done to end):")
         i = str(input())
         if i == "done":
             in_progress = False
-        elif i == "clear":
-            print("starting a new game")
-            new_game()
-            in_progress = False
-            play(load())
         elif i in scores:
             scores = win(i, scores)
-            print(load())
+            print(scores)
         else:
             print("Invalid input")
+    sb.save_scores(scores)
 
+def win(player: str, scores: dict[str, int]) -> dict[str, int]:
+    scores[player] += 1
+    return scores
+
+def get_names() -> list[str]:
+    print("How many players?")
+    n = int(input())
+    names = []
+    for i in range(n):
+        print(f"Enter player {i+1}: ")
+        names.append(input())
+    return names
 
 def main():
-    player_scores = {}
-    if is_file_empty():
+    sb = Scoreboard()
+
+    if sb.is_file_empty():
         print("no game data found, Creating new game.")
-        new_game()
-        print(load())
+        sb.create_scoreboard(get_names())
+        print(sb.scores)
     else:
         print("game data found")
-        player_scores = load()
-        print(player_scores)
+        print(sb.scores)
 
-    play(player_scores)
+    play(sb)
 
 main()
